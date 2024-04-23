@@ -48,6 +48,7 @@
 	# Install Python executables
 	install(PROGRAMS
 	  scripts/server.py
+	  scripts/processtime.py
 	  DESTINATION lib/${PROJECT_NAME} # change name of node in python
 	)
 

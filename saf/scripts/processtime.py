@@ -26,7 +26,9 @@ class Procesnode(Node):
         )
 
         # Read data from CSV file
-        self.data = pd.read_csv('table.csv', sep='\t', index_col=0)
+        self.data = pd.read_csv('/home/magnusdaroe/SAFmini/saf/table.csv', sep='\t', index_col=0) # Make sure to change the path to the correct one
+
+        self.get_logger().info("Read data from CSV file. Ready for requests.")
 
         # Lock for thread safety
         self.command_lock = threading.Lock()
