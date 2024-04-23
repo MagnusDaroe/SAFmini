@@ -25,10 +25,16 @@ class Server(Node):
             '/request',
             10
         )
-        self.publish_timer = self.create_timer(0.0, self.status_publisher)
+        self.publish_timer = self.create_timer(0.0, self.server_thread)
 
         # Flag to indicate reply received
         self.reply_received = False
+
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.bind(('192.168.1.111', 24440))  # You can choose any port that is free on your system
+        self.server_socket.listen(10)
+
+        self.get_logger().info("Server is waiting for connections...")
 
         # Lock for thread safety
         self.command_lock = threading.Lock()
@@ -46,27 +52,24 @@ class Server(Node):
         """
         Thread function to handle incoming connections
         """
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.bind(('172.20.66.36', 43108))  # You can choose any port that is free on your system
-        server_socket.listen(10)
-
-        self.get_logger().info("Server is waiting for connections...")
-
+     
         while rclpy.ok():
-            client_socket, address = server_socket.accept()
+            client_socket, address = self.server_socket.accept()
             self.get_logger().info(f"Connection from {address} has been established.")
             
             received_data = client_socket.recv(1024)
-            decoded_data = self.decode(received_data)
+            self.get_logger().info(f"Received data: {received_data}")
+            decoded_data = self.decodeXML(str(received_data))
+            self.get_logger().info(f"decoded data: {decoded_data}")
 
             if decoded_data:
                 # Assuming the data has structure "id_carrier, id_station, time_stamp"
-                id_carrier, id_station, plc_timestamp = decoded_data
+                id_station, id_carrier, date, plc_timestamp = decoded_data
                 
                 msg = Processtime()
-                msg.id_carrier = id_carrier
-                msg.id_station = id_station
-                msg.plc_timestamp = plc_timestamp
+                msg.id_carrier = int(id_carrier)
+                msg.id_station = int(id_station)
+                #msg.plc_timestamp = float(plc_timestamp)
                 
                 self.reply_received = False
                 self.publisher_request.publish(msg)
@@ -79,18 +82,17 @@ class Server(Node):
 
             client_socket.close()
 
-        server_socket.close()
+        self.server_socket.close()
 
-    def decode(self, data):
-        """
-        Decode received data
-        """
-        match = re.search(rb'^(\d+), (\d+), (\d+)', data)
-        if match:
-            return tuple(int(match.group(i)) for i in range(1, 4))
-        else:
-            self.get_logger().info("No match found.")
-            return None
+
+    def decodeXML(self, XML_str):
+        PLC_id = XML_str.split("<PLCID>")[1].split("</PLCID>")[0].split("_")[-1]
+        carrier_id = XML_str.split("<CARRIERID>")[1].split("</CARRIERID>")[0]
+        date_and_time = XML_str.split("<DATEANDTIME>")[1].split("</DATEANDTIME>")[0]
+        date_lst = date_and_time.split("#")[1].split("-")
+        date= date_lst[0] + "-" + date_lst[1] + "-" + date_lst[2]
+        time = date_and_time.split("#")[1].split("-")[-1]
+        return [PLC_id, carrier_id, date, time]
 
 def main(args=None):
     rclpy.init(args=args)
