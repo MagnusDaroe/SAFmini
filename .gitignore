@@ -1,1 +1,10 @@
-
+*.json
+.vscode/
+build/
+install/
+log/
+drone/build/
+drone/install/
+drone/log/
+.vscode/tasks.json
+.vscode/launch.json
