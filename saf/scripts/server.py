@@ -34,6 +34,8 @@ class Server(Node):
         self.server_socket.bind(('192.168.1.111', 24440))  # You can choose any port that is free on your system
         self.server_socket.listen(10)
 
+        self.connection = False
+
         self.get_logger().info("Server is waiting for connections...")
 
         # Lock for thread safety
@@ -43,9 +45,9 @@ class Server(Node):
         """
         Callback function for the reply subscriber
         """
+        self.get_logger().info(f"Received reply: {msg}")
         with self.command_lock: 
-            self.get_logger().info(f"Received reply: {msg.processtime}")
-            self.processtime = msg.processtime
+            self.processtime = msg.process_time
             self.reply_received = True
 
     def server_thread(self):
@@ -54,13 +56,16 @@ class Server(Node):
         """
      
         while rclpy.ok():
-            client_socket, address = self.server_socket.accept()
-            self.get_logger().info(f"Connection from {address} has been established.")
-            
-            received_data = client_socket.recv(1024)
-            self.get_logger().info(f"Received data: {received_data}")
-            decoded_data = self.decodeXML(str(received_data))
-            self.get_logger().info(f"decoded data: {decoded_data}")
+
+            if not self.connection:
+                client_socket, address = self.server_socket.accept()
+                self.get_logger().info(f"Connection from {address} has been established.")
+                
+                received_data = client_socket.recv(1024)
+                self.get_logger().info(f"Received data: {received_data}")
+                decoded_data = self.decodeXML(str(received_data))
+                self.get_logger().info(f"decoded data: {decoded_data}")
+
 
             if decoded_data:
                 # Assuming the data has structure "id_carrier, id_station, time_stamp"
@@ -80,7 +85,9 @@ class Server(Node):
                 response = f"{self.processtime}"
                 client_socket.sendall(response.encode('utf-8')) 
 
-            client_socket.close()
+                client_socket.close()
+            
+                self.connection = False
 
         self.server_socket.close()
 

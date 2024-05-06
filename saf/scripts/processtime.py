@@ -40,16 +40,19 @@ class Procesnode(Node):
 
 
         with self.command_lock: 
-            self.get_logger().info(f"Received request")
+            self.get_logger().info(f"Received request {msg}")
             self.id_carrier = msg.id_carrier
             self.id_station = msg.id_station 
             
             # Make reply
             self.processtime =self.get_data(self.id_carrier, self.id_station)
+            self.get_logger().info(f"Got the following process time from the table {self.processtime}")
 
             # Publish reply
             reply_msg = Processtime()
-            reply_msg.processtime = self.processtime
+            reply_msg.process_time = float(self.processtime)
+
+            self.publisher_request.publish(reply_msg)
 
     def get_data(self, carrier_id, station_id):
         if carrier_id < 0 or carrier_id >= self.data.shape[0] or station_id < 0 or station_id >= self.data.shape[1]:
