@@ -6,6 +6,7 @@ import threading
 from saf.msg import Processtime
 import socket
 import re
+import time
 
 class Server(Node):
     def __init__(self):
@@ -14,7 +15,7 @@ class Server(Node):
         # Define subscriber
         self.subscription_reply = self.create_subscription(
             Processtime,
-            '/reply',
+            '/a_reply',
             self.process_reply,
             10
         )
@@ -25,7 +26,7 @@ class Server(Node):
             '/request',
             10
         )
-        self.publish_timer = self.create_timer(0.0, self.server_thread)
+        self.publish_timer = self.create_timer(0.01, self.server_thread)
 
         # Flag to indicate reply received
         self.reply_received = False
@@ -33,6 +34,7 @@ class Server(Node):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind(('192.168.1.111', 24440))  # You can choose any port that is free on your system
         self.server_socket.listen(10)
+        self.reply_received = False
 
         self.connection = False
 
@@ -54,42 +56,42 @@ class Server(Node):
         """
         Thread function to handle incoming connections
         """
-     
         while rclpy.ok():
-
             if not self.connection:
                 client_socket, address = self.server_socket.accept()
                 self.get_logger().info(f"Connection from {address} has been established.")
-                
                 received_data = client_socket.recv(1024)
                 self.get_logger().info(f"Received data: {received_data}")
                 decoded_data = self.decodeXML(str(received_data))
                 self.get_logger().info(f"decoded data: {decoded_data}")
 
+                self.connection = True  # Set connection flag to True
 
-            if decoded_data:
-                # Assuming the data has structure "id_carrier, id_station, time_stamp"
-                id_station, id_carrier, date, plc_timestamp = decoded_data
-                
-                msg = Processtime()
-                msg.id_carrier = int(id_carrier)
-                msg.id_station = int(id_station)
-                #msg.plc_timestamp = float(plc_timestamp)
-                
-                self.reply_received = False
-                self.publisher_request.publish(msg)
+                if decoded_data:
+                    id_station, id_carrier, date, plc_timestamp = decoded_data
+                    msg = Processtime()
+                    msg.id_carrier = int(id_carrier)
+                    msg.id_station = int(id_station)
+                    self.publisher_request.publish(msg)
+                    self.get_logger().info(f"Sent request: {msg}")
 
-                while not self.reply_received:
-                    pass
+                    # Wait for reply for a certain duration
+                    reply_received = False
+                    timeout = 10  # Adjust the timeout as needed
+                    start_time = time.time()
+                    while not reply_received and time.time() - start_time < timeout:
+                        time.sleep(0.1)  # Adjust sleep duration as needed
 
-                response = f"{self.processtime}"
-                client_socket.sendall(response.encode('utf-8')) 
+                    if reply_received:
+                        self.get_logger().info("Received reply")
+                        response = f"{self.processtime}"
+                        client_socket.sendall(response.encode('utf-8')) 
+                    else:
+                        self.get_logger().warning("No reply received within timeout")
 
-                client_socket.close()
-            
-                self.connection = False
+                    client_socket.close()
+                    self.connection = False  # Reset connection flag
 
-        self.server_socket.close()
 
 
     def decodeXML(self, XML_str):
@@ -104,10 +106,7 @@ class Server(Node):
 def main(args=None):
     rclpy.init(args=args)
     server_node = Server()
-    server_thread = threading.Thread(target=server_node.server_thread, daemon=True)
-    server_thread.start()
     rclpy.spin(server_node)
-    server_thread.join()
     server_node.destroy_node()
     rclpy.shutdown()
 

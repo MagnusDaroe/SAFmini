@@ -8,7 +8,7 @@ import pandas as pd
 
 class Procesnode(Node):
     def __init__(self):
-        super().__init__('server_node')
+        super().__init__('process_node')
         
         # Define subscriber
         self.subscription_reply = self.create_subscription(
@@ -21,7 +21,7 @@ class Procesnode(Node):
         # Define publisher
         self.publisher_request = self.create_publisher(
             Processtime,
-            '/reply',
+            '/a_reply',
             10
         )
 

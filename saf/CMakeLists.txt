@@ -49,6 +49,7 @@
 	install(PROGRAMS
 	  scripts/server.py
 	  scripts/processtime.py
+	  scripts/listen.py
 	  DESTINATION lib/${PROJECT_NAME} # change name of node in python
 	)
 
