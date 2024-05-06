@@ -30,7 +30,7 @@
 
 	rosidl_generate_interfaces(${PROJECT_NAME}
 	  "msg/Processtime.msg"
-	  "srv/Clock.srv"
+	  "srv/ProcessTimeService.srv"
 	  DEPENDENCIES builtin_interfaces geometry_msgs std_msgs sensor_msgs)
 	# Include Cpp "include" directory
 	include_directories(include)
@@ -47,9 +47,8 @@
 	ament_python_install_package(${PROJECT_NAME})
 	# Install Python executables
 	install(PROGRAMS
-	  scripts/server.py
-	  scripts/processtime.py
-	  scripts/listen.py
+	  scripts/server_node.py
+	  scripts/processtime_node.py
 	  DESTINATION lib/${PROJECT_NAME} # change name of node in python
 	)
 

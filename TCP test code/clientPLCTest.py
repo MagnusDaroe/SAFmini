@@ -1,7 +1,7 @@
 import socket
 import time
 
-HOST = '192.168.1.111'  # Listen on all network interfaces
+HOST = '192.168.0.101'  # Listen on all network interfaces
 PORT = 24440      # Choose a port to listen on
 
 
