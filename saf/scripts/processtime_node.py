@@ -37,7 +37,7 @@ class Processnode(Node):
             return request
 
     def get_data(self, carrier_id, station_id):
-        if carrier_id < 0 or carrier_id >= self.data.shape[0] or station_id < 0 or station_id >= self.data.shape[1]:
+        if carrier_id < 0 or carrier_id > self.data.shape[0] or station_id < 0 or station_id > self.data.shape[1]:
             self.get_logger().info('Invalid carrier_id or station_id')
             return None
         
