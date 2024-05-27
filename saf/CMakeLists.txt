@@ -16,10 +16,6 @@
 	find_package(rclcpp REQUIRED)
 	find_package(rclpy REQUIRED)
 	
-	find_package(geometry_msgs REQUIRED)
-	find_package(std_msgs REQUIRED)
-	find_package(sensor_msgs REQUIRED)
-	
 	find_package(builtin_interfaces REQUIRED)
 	find_package(rosidl_default_generators REQUIRED)
 	if(NOT builtin_interfaces_FOUND)
@@ -31,13 +27,14 @@
 	rosidl_generate_interfaces(${PROJECT_NAME}
 	  "msg/Processtime.msg"
 	  "srv/ProcessTimeService.srv"
-	  DEPENDENCIES builtin_interfaces geometry_msgs std_msgs sensor_msgs)
+	  DEPENDENCIES builtin_interfaces)
+	
 	# Include Cpp "include" directory
 	include_directories(include)
 
 	# Create Cpp executable
-	add_executable(cpp_executable src/drone_control_node.cpp) # change name of node
-	ament_target_dependencies(cpp_executable rclcpp)
+	add_executable(cpp_executable src/process_time.cpp) # change name of node
+	ament_target_dependencies(processtime rclcpp)
 	# Install Cpp executables
 	install(TARGETS
 	  cpp_executable
