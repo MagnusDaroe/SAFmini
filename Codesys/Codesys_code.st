@@ -33,12 +33,11 @@ CASE state OF
 	END_IF
 	
 	
-	4: //reads RFID tag	when arrived at the last sensor at the gate, and stops the conveyor
+	4: //reads RFID tag	when arrived at the last sensor at the gate.
 	IF IO.xBG21 = TRUE THEN		
 		IF RFID.xReady THEN
 			IF RfidData.uiCarrierID = 0 THEN
 				RFID.ReadTag(uiStartAddress := 0, uiDataLength := SIZEOF(RfidData), pData := ADR(RfidData));
-				//IO.xQA1_SLOW := FALSE;
 			ELSE
 				state := 5;
 			END_IF
@@ -60,7 +59,6 @@ CASE state OF
 
 	IF datetimeFB.xDone THEN
 		datetime := datetimeFB.dtDateAndTime;
-		
 		datetimestring := DT_TO_STRING(datetime);
 		IF datetimestring = '' THEN //if date is empty, check again.
 			state := 6;
@@ -105,7 +103,6 @@ CASE state OF
 		TimerProcess(IN := FALSE);
 		IO.xMB20 := TRUE;
 		state := 11;
-		
 	END_IF
 	
 	11: // close gate behind the carrier, and return to state 1, which enables the next carrier to be processed.
@@ -113,12 +110,9 @@ CASE state OF
 		IO.xMB20 := FALSE;
 		state := 1;
 	END_IF
-	
-	
 END_CASE
 
 TCPclient();
 RFID();
 DatetimeFB();
 TimerProcess();
-
