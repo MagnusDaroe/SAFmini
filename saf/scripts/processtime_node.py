@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import rclpy
 from rclpy.node import Node
 from saf.srv import ProcessTimeService
@@ -21,19 +20,19 @@ class Processnode(Node):
         # Lock for thread safety
         self.command_lock = threading.Lock()
 
-    def process_request(self, response, request):
+    def process_request(self, request, response):
         """
         Check if the message is a request and send a reply
         """
         with self.command_lock:
-            self.get_logger().info(f"Received request {response}")
-            request.process_time = float(self.get_data(response.id_carrier, response.id_station))
+            self.get_logger().info(f"Received request {request}")
+            response.process_time = float(self.get_data(request.id_carrier, request.id_station))
             
             # Make reply
-            self.get_logger().info(f"Got the following process time from the table {request.process_time}")
+            self.get_logger().info(f"Got the following process time from the table {response.process_time}")
 
             # Publish reply
-            return request
+            return response
 
     def get_data(self, carrier_id, station_id):
         if carrier_id < 0 or carrier_id > self.data.shape[0] or station_id < 0 or station_id > self.data.shape[1]:
